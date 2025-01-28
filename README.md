@@ -4,7 +4,7 @@ This is a simple webview printer that uses the `webview` crate to render a webpa
 
 ## Usage
 
-1. Clone the repository
+1. Clone the repository.
 2. Install dependencies:
 ```bash
 npm install
@@ -13,7 +13,7 @@ npm install
 ```bash
 npm start
 ```
-4. Open the browser and navigate to `http://localhost:8080`
+4. The app automatically opens.
 
 
 ## License
