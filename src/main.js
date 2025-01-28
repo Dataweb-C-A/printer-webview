@@ -1,4 +1,7 @@
 const { app, BrowserWindow, globalShortcut } = require('electron')
+const path = require('path');
+
+require('./websocket');
 require('dotenv').config()
 
 let mainWindow
@@ -14,7 +17,8 @@ function createWindow() {
     webPreferences: {
       devTools: false,
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js'),
     }
   })
 
