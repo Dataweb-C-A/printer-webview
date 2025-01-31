@@ -38,6 +38,9 @@ async function printText(input) {
             case "bold":
               printer.style("B").text(content);
               break;
+            case "bar":
+              printer.style("B").barcode(content, "CODE39");
+              break;
             case "underline":
               printer.style("U").text(content);
               break;
