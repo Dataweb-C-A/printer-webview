@@ -1,4 +1,5 @@
 dist
+src/temp_image.png
 node_modules
 .qodo
 
