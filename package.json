@@ -11,7 +11,8 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --x64",
-    "dist32": "electron-builder --win --ia32"
+    "dist32": "electron-builder --win --ia32",
+    "distarm": "electron-builder --linux --armv7l"
   },
   "build": {
     "appId": "com.dataweb.cdapuestas",
