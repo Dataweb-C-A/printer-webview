@@ -1,7 +1,7 @@
 const escpos = require("escpos");
-var im = require("imagemagick");
 const path = require("path");
 const { writeFileSync } = require("fs");
+
 escpos.USB = require("escpos-usb");
 
 const device = new escpos.USB();
@@ -33,7 +33,6 @@ async function printText(input) {
   }
 }
 
-// Función privada para procesar cada línea
 async function processLine(line, printer) {
   let currentPos = 0;
   const length = line.length;
@@ -78,11 +77,9 @@ async function processLine(line, printer) {
   if (buffer) printer.text(buffer);
 }
 
-// Función para manejar etiquetas de apertura
 async function handleOpenTag(tagContent, line, styleStack, printer, getCurrentPos) {
   const tagParts = tagContent.toLowerCase().split(' ');
   const tagName = tagParts[0];
-  const content = tagParts.slice(1).join(' ');
 
   if (['bar', 'qr', 'img'].includes(tagName)) {
     const closingTag = `[/${tagName}]`;
@@ -97,8 +94,8 @@ async function handleOpenTag(tagContent, line, styleStack, printer, getCurrentPo
         printer.style('B').align('ct').barcode(content, 'CODE39', { width: 250, height: 80 });
         break;
       case 'qr':
-        await new Promise(resolve => {
-          printer.align('ct').qrimage(content, { type: 'png', size: 10 }, resolve);
+        await new Promise(() => {
+          printer.align('ct').qrimage(content, { type: 'png', size: 10 });
         });
         printer.feed(2);
         break;
@@ -146,44 +143,22 @@ function applyStyleTag(tagName, styleStack, printer) {
 }
 
 async function printBase64Image(base64String, printer) {
-  const imagePath = path.join(__dirname, "temp_image.png");
-  const resizedPath = path.join(__dirname, "temp_image_resized.png"); // Archivo separado para redimensión
-
   try {
-    // 1. Decodificar y guardar imagen original
-    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
+    const imagePath = path.join(__dirname, "temp_image.png");
+  
+    const base64Data = base64String.replace(/^data:image\/w+;base64,/, "");
     writeFileSync(imagePath, Buffer.from(base64Data, "base64"));
-
-    // 2. Redimensionar y convertir a formato compatible
+  
     await new Promise((resolve, reject) => {
-      im.convert([
-        imagePath,
-        "-resize", "x170",          // Altura fija de 170px
-        "-colorspace", "Gray",      // Forzar escala de grises
-        "-threshold", "60%",        // Aumentar contraste
-        "-type", "bilevel",         // 1-bit de profundidad
-        resizedPath
-      ], (err) => err ? reject(err) : resolve());
-    });
-
-    // 3. Cargar y imprimir imagen procesada
-    await new Promise((resolve, reject) => {
-      escpos.Image.load(resizedPath, (err, image) => {
-        if (err) return reject(err);
-        
-        printer.align("ct")
-          .raster(image, "dwdh")
-          .feed(3);
-        
-        // Limpiar archivos temporales
+      escpos.Image.load(imagePath, function (image) {
+        printer.align("ct").raster(image);
+        printer.feed(2);
         writeFileSync(imagePath, "");
-        writeFileSync(resizedPath, "");
         resolve();
-      });
-    });
-
+      })
+    })
   } catch (error) {
-    console.error("Error procesando imagen:", error.message);
+    console.error("Error printing image:", error.message);
   }
 }
 
