@@ -1,13 +1,13 @@
 const escpos = require("escpos");
 const path = require("path");
 const { writeFileSync } = require("fs");
-
 escpos.USB = require("escpos-usb");
 
 const device = new escpos.USB();
-const printer = new escpos.Printer(device, { encoding: "ISO-8859-1" });
+const printer = new escpos.Printer(device, { encoding: "ISO-8859-1" }); // ISO-8859-1 is the encoding for the Spanish language
 
-async function printText(input) {
+
+async function print(input) {
   try {
     device.open(async function () {
       printer.size(0.5, 0.5);
@@ -70,32 +70,35 @@ async function processLine(line, printer) {
         revert();
       }
     } else {
-      await handleOpenTag(tagContent, line, styleStack, printer, () => currentPos);
+      const newPos = await handleOpenTag(tagContent, line, styleStack, printer, currentPos);
+      if (newPos !== undefined) {
+        currentPos = newPos;
+      }
     }
   }
 
   if (buffer) printer.text(buffer);
 }
 
-async function handleOpenTag(tagContent, line, styleStack, printer, getCurrentPos) {
+async function handleOpenTag(tagContent, line, styleStack, printer, startPos) {
   const tagParts = tagContent.toLowerCase().split(' ');
   const tagName = tagParts[0];
 
   if (['bar', 'qr', 'img'].includes(tagName)) {
     const closingTag = `[/${tagName}]`;
-    const closingIndex = line.indexOf(closingTag, getCurrentPos());
-    if (closingIndex === -1) return;
-    
-    const content = line.substring(getCurrentPos(), closingIndex);
-    currentPos = closingIndex + closingTag.length;
+    const closingIndex = line.indexOf(closingTag, startPos);
+    if (closingIndex === -1) return startPos;
+
+    const content = line.substring(startPos, closingIndex);
+    const newPos = closingIndex + closingTag.length;
 
     switch (tagName) {
       case 'bar':
         printer.style('B').align('ct').barcode(content, 'CODE39', { width: 250, height: 80 });
         break;
       case 'qr':
-        await new Promise(() => {
-          printer.align('ct').qrimage(content, { type: 'png', size: 10 });
+        await new Promise(resolve => {
+          printer.align('ct').qrimage(content, { type: 'png', size: 10 }, resolve);
         });
         printer.feed(2);
         break;
@@ -103,12 +106,14 @@ async function handleOpenTag(tagContent, line, styleStack, printer, getCurrentPo
         await printBase64Image(content, printer);
         break;
     }
+
+    return newPos;
   } else {
     applyStyleTag(tagName, styleStack, printer);
+    return undefined;
   }
 }
 
-// Función para aplicar estilos
 function applyStyleTag(tagName, styleStack, printer) {
   let revertFn;
   switch (tagName) {
@@ -144,22 +149,24 @@ function applyStyleTag(tagName, styleStack, printer) {
 
 async function printBase64Image(base64String, printer) {
   try {
-    const imagePath = path.join(__dirname, "temp_image.png");
-  
-    const base64Data = base64String.replace(/^data:image\/w+;base64,/, "");
-    writeFileSync(imagePath, Buffer.from(base64Data, "base64"));
-  
+    const imagePath = path.join(__dirname, 'temp_image.png');
+
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
+    writeFileSync(imagePath, Buffer.from(base64Data, 'base64'));
+
+    console.log(imagePath)
+
     await new Promise((resolve, reject) => {
       escpos.Image.load(imagePath, function (image) {
         printer.align("ct").raster(image);
         printer.feed(2);
-        writeFileSync(imagePath, "");
+        writeFileSync(imagePath, '');
         resolve();
-      })
-    })
+      });
+    });
   } catch (error) {
-    console.error("Error printing image:", error.message);
+    console.error('Error printing image:', error.message);
   }
 }
 
-module.exports = { printText };
+module.exports = { print };

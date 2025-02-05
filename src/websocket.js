@@ -1,7 +1,9 @@
 const WebSocket = require('ws');
-const { printText } = require('./printer');
+const { print } = require('./printer');
 
-const wss = new WebSocket.Server({ port: 8080 });
+require('dotenv').config()
+
+const wss = new WebSocket.Server({ port: process.env.PORT || 8080 });
 
 wss.on('connection', (ws) => {
   console.log('WebSocket server connected.');
@@ -10,7 +12,7 @@ wss.on('connection', (ws) => {
     try {
       const data = JSON.parse(message);
       if (data.text) {
-        printText(data.text, "RONGTA 80mm Series Printer");
+        print(data.text);
         ws.send(JSON.stringify({ status: 'success', message: 'Impresión completada.' }));
       } else {
         ws.send(JSON.stringify({ status: 'error', message: 'Datos inválidos.' }));
