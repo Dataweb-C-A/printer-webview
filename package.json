@@ -13,11 +13,20 @@
     "dist": "electron-builder --win --x64",
     "dist32": "electron-builder --win --ia32",
     "linux": "electron-builder --linux --x64",
-    "linux32": "electron-builder --linux --ia32"
+    "linux32": "electron-builder --linux --ia32",
+    "mac": "electron-builder --mac",
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.dataweb.cdapuestas",
     "productName": "Cdapuestas Webview",
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icons/cdapuestas.icns"
+    },
     "linux": {
       "target": [
         "AppImage",
