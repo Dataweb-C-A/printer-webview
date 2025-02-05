@@ -9,11 +9,15 @@ This is a simple webview printer that uses the `webview` crate to render a webpa
 ```bash
 npm install
 ```
-3. Run the server:
+3. Configure enviroment variables (.env) in root of project
+   - Variables:
+       - APP_URL = string
+       - PORT = number
+5. Run the server:
 ```bash
 npm start
 ```
-4. The app automatically opens.
+5. The app automatically opens.
 
 
 ## License
