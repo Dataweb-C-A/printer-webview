@@ -22,7 +22,7 @@ function createWindow() {
     }
   })
 
-  mainWindow.loadURL(process.env.APP_URL || 'https://cdapuestas.com')
+  mainWindow.loadURL(process.env.APP_URL || 'https://localhost:3000')
 
   mainWindow.on('leave-full-screen', () => {
     if (!globalShortcut.isPressed('F11')) {

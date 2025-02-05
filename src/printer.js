@@ -6,7 +6,6 @@ escpos.USB = require("escpos-usb");
 const device = new escpos.USB();
 const printer = new escpos.Printer(device, { encoding: "ISO-8859-1" }); // ISO-8859-1 is the encoding for the Spanish language
 
-
 async function print(input) {
   try {
     device.open(async function () {
