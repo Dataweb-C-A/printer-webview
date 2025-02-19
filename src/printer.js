@@ -1,6 +1,7 @@
-const escpos = require("escpos");
-const path = require("path");
+const path = require('path');
+const escpos = require("escpos"); 
 const { writeFileSync } = require("fs");
+
 escpos.USB = require("escpos-usb");
 
 const device = new escpos.USB();

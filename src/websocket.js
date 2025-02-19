@@ -3,7 +3,7 @@ const { print } = require('./printer');
 
 require('dotenv').config()
 
-const wss = new WebSocket.Server({ port: process.env.PORT || 8080 });
+const wss = new WebSocket.Server({ port: 1315 });
 
 wss.on('connection', (ws) => {
   console.log('WebSocket server connected.');
@@ -28,4 +28,4 @@ wss.on('connection', (ws) => {
   });
 });
 
-console.log('WebSocket running in port 8080');
+console.log('WebSocket running in port 1315');
