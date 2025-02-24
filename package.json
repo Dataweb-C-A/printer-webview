@@ -20,7 +20,8 @@
   },
   "build": {
     "appId": "com.dataweb.cdapuestas",
-    "productName": "Cdapuestas Webview",
+    "productName": "cdapuestas_webview",
+    "artifactName": "cdapuestas-webview-setup-${version}.${ext}",
     "mac": {
       "target": [
         "dmg",
@@ -42,7 +43,8 @@
       },
       "files": [
         "**/*",
-        "!temp/**/*"
+        "!temp/**/*",
+        "!**/*.tmp"
       ]
     },
     "win": {
@@ -66,7 +68,7 @@
     "electron": "^34.0.1",
     "electron-builder": "^25.1.8",
     "electron-prebuilt-compile": "8.2.0",
-    "uuid": "^11.0.5"
+    "uuid": "^11.1.0"
   },
   "dependencies": {
     "@node-escpos/core": "^0.6.0",

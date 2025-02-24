@@ -1,6 +1,7 @@
 const path = require('path');
 const escpos = require("escpos"); 
-const { writeFileSync } = require("fs");
+const fs = require('fs-extra');
+const { app } = require('electron');
 
 escpos.USB = require("escpos-usb");
 
@@ -148,24 +149,34 @@ function applyStyleTag(tagName, styleStack, printer) {
 }
 
 async function printBase64Image(base64String, printer) {
+  let imagePath;
   try {
-    const imagePath = path.join(__dirname, 'temp_image.png');
+    const tempDir = app.getPath('temp');
+    await fs.ensureDir(tempDir);
+    
+    const imageName = `temp_image_${Date.now()}.png`;
+    imagePath = path.join(tempDir, imageName);
 
     const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
-    writeFileSync(imagePath, Buffer.from(base64Data, 'base64'));
-
-    console.log(imagePath)
+    await fs.writeFile(imagePath, base64Data, 'base64');
 
     await new Promise((resolve, reject) => {
-      escpos.Image.load(imagePath, function (image) {
+      escpos.Image.load(imagePath, (image) => {
         printer.align("ct").raster(image);
         printer.feed(2);
-        writeFileSync(imagePath, '');
         resolve();
       });
     });
   } catch (error) {
     console.error('Error printing image:', error.message);
+  } finally {
+    if (imagePath) {
+      try {
+        await fs.remove(imagePath);
+      } catch (err) {
+        console.error('Error deleting temp image:', err.message);
+      }
+    }
   }
 }
 
