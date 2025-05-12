@@ -16,12 +16,20 @@
     "linux": "electron-builder --linux --x64",
     "linux32": "electron-builder --linux --ia32",
     "mac": "electron-builder --mac",
+    "publish": "electron-builder build --win --x64 --publish always",
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.dataweb.cdapuestas",
     "productName": "cdapuestas_webview",
     "artifactName": "cdapuestas-webview-setup-${version}.${ext}",
+    "publish": {
+      "provider": "github",
+      "owner": "your-github-username",
+      "repo": "cdapuestas-webview",
+      "private": true,
+      "releaseType": "release"
+    },
     "mac": {
       "target": [
         "dmg",
@@ -48,17 +56,48 @@
       ]
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
       "icon": "build/icons/cdapuestas.ico",
       "legalTrademarks": "Dataweb",
-      "publisherName": "Javier"
+      "publisherName": "Javier",
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "build/icons/cdapuestas.ico",
-      "uninstallerIcon": "build/icons/cdapuestas.ico"
-    }
+      "uninstallerIcon": "build/icons/cdapuestas.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ]
   },
   "overrides": {
     "usb": "1.8.0"
@@ -74,6 +113,8 @@
     "@node-escpos/core": "^0.6.0",
     "@node-escpos/usb-adapter": "^0.3.1",
     "dotenv": "^16.4.7",
+    "electron-log": "^5.4.0",
+    "electron-updater": "^6.6.2",
     "escpos": "3.0.0-alpha.6",
     "escpos-usb": "3.0.0-alpha.4",
     "fs-extra": "^11.3.0",
@@ -81,5 +122,9 @@
     "jimp": "^1.6.0",
     "usb": "1.8.0",
     "ws": "^8.18.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dataweb-C-A/printer-webview"
   }
 }
