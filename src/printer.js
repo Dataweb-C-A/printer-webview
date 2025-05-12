@@ -2,6 +2,7 @@ const path = require('path');
 const escpos = require("escpos"); 
 const fs = require('fs-extra');
 const { app } = require('electron');
+const { cdapuestas } = require('./cdapuestas');
 
 escpos.USB = require("escpos-usb");
 
@@ -12,7 +13,9 @@ async function print(input) {
   try {
     device.open(async function () {
       printer.size(0.5, 0.5);
-      const lines = input.split("\n");
+      const lines = input.split(
+        /\r?\n|\r|\[NEXT\]/g
+      );
 
       for (const line of lines) {
         const trimmedLine = line.trim();
@@ -22,12 +25,19 @@ async function print(input) {
           printer.drawLine();
         } else if (trimmedLine.toUpperCase() === "[CUT]") {
           printer.feed().cut();
+        } else if (trimmedLine.toUpperCase() === "[CDAPUESTAS]") {
+          await printBase64Image(cdapuestas, printer);
+        } else if (trimmedLine.toUpperCase() === "[NEXT]") {
+          printer.newLine();
+        } else if (trimmedLine.toUpperCase() === "[FLUSH]") {
+          printer.newLine().flush().close();
+          device.close();
         } else {
           await processLine(trimmedLine, printer);
         }
       }
 
-      printer.close();
+      printer.newLine().flush().close();
     });
   } catch (error) {
     console.error("Error printing:", error.message);
@@ -85,7 +95,7 @@ async function handleOpenTag(tagContent, line, styleStack, printer, startPos) {
   const tagParts = tagContent.toLowerCase().split(' ');
   const tagName = tagParts[0];
 
-  if (['bar', 'qr', 'img'].includes(tagName)) {
+  if (['bar', 'qr', 'table', 'img'].includes(tagName)) {
     const closingTag = `[/${tagName}]`;
     const closingIndex = line.indexOf(closingTag, startPos);
     if (closingIndex === -1) return startPos;
@@ -103,6 +113,42 @@ async function handleOpenTag(tagContent, line, styleStack, printer, startPos) {
         });
         printer.feed(2);
         break;
+        case 'table':
+          const MAX_COLUMNS = 4;
+          
+          const rows = content.split('|').filter(row => row.trim());
+          const rowCount = rows.length;
+          
+          const COLUMN_WIDTHS = {
+              1: [1],
+              2: [0.5, 0.5],
+              3: [0.33, 0.33, 0.33],
+              4: [0.25, 0.25, 0.25, 0.25]
+          };
+          
+          const COLUMN_ALIGNMENTS = {
+              1: ['CENTER'],
+              2: ['CENTER', 'CENTER'],
+              3: ['LEFT', 'CENTER', 'RIGHT'],
+              4: ['LEFT', 'CENTER', 'CENTER', 'RIGHT']
+          };
+      
+          if (rowCount > MAX_COLUMNS) {
+              printer.style('B')
+                     .align('CENTER')
+                     .text(`Error: Maximum ${MAX_COLUMNS} columns allowed`);
+              break;
+          }
+      
+          const tableData = rows.map((row, index) => ({
+              text: row.trim(),
+              align: COLUMN_ALIGNMENTS[rowCount][index],
+              width: COLUMN_WIDTHS[rowCount][index],
+              style: 'B'
+          }));
+      
+          printer.tableCustom(tableData, { encoding: 'cp857', size: [1, 1] });
+          break;
       case 'img':
         await printBase64Image(content, printer);
         break;
@@ -122,6 +168,8 @@ function applyStyleTag(tagName, styleStack, printer) {
       printer.align('ct');
       revertFn = () => printer.align('lt');
       break;
+    case 'table':
+
     case 'left':
       printer.align('lt');
       revertFn = () => {};
