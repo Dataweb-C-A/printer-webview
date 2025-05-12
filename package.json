@@ -17,6 +17,7 @@
     "linux32": "electron-builder --linux --ia32",
     "mac": "electron-builder --mac",
     "publish": "electron-builder build --win --x64 --publish always",
+    "publishLinux": "electron-builder build --linux --x64 --publish always",
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
